@@ -1,0 +1,33 @@
+<resources>
+    <string name="app_name">AbrirTM</string>
+    <string name="action_scan_qr">Leer QR</string>
+    <!-- Strings used for fragments for navigation -->
+    <string name="open_TM_fragment_label">Abrir TM</string>
+    <string name="second_fragment_label">Second Fragment</string>
+    <string name="open_TM">Abrir TM</string>
+    <string name="clean_TM">Limpiar</string>
+    <string name="previous">Previous</string>
+
+    <string name="hello_first_fragment">Hello first fragment</string>
+    <string name="hello_second_fragment">Hello second fragment. Arg: %1$s</string>
+    <string name="enlace_tm">Enlace TM</string>
+    <string name="example_link">transfermovil://tm_compra_en_linea/action?id_transaccion=NMY-49AA433856122517&amp;importe=471.70&amp;moneda=CUP&amp;numero_proveedor=30060</string>
+    <string name="pegue_el_enlace_de_tm">Pegue el enlace de TM</string>
+    <string name="error_tm">Error TM</string>
+    <string name="information">Información</string>
+    <string name="error_link">Error enlace</string>
+    <string name="no_tiene_instalado_tm">No tiene instalado TM</string>
+    <string name="desea_abrir_tm">Desea abrir Transfermóvil</string>
+    <string name="enlace_incorrecto">Enlace incorrecto</string>
+    <string name="error_codigo_vacio">Introduzca un código</string>
+    <string name="copyright">Desarrollado por\n José Ernesto Lenzano Ramírez</string>
+    <string name="version">Versión %s</string>
+
+    <string name="need_for_permission">Se requiere permiso</string>
+    <string name="no">No</string>
+    <string name="ok">Entendido</string>
+
+    <string name="need_for_camera_permission">Se requiere acceder a la cámara para leer el QR.</string>
+    <string name="camera_permission_not_granted">Permiso para acceder a la cámara no otorgado</string>
+
+</resources>
