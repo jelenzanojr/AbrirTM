@@ -1,26 +1,19 @@
 package com.blikoon.qrcodescanner;
 
 
-import android.annotation.SuppressLint;
 import android.app.Activity;
-import android.content.ContentUris;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.res.AssetFileDescriptor;
-import android.database.Cursor;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
 import android.os.Vibrator;
-import android.provider.DocumentsContract;
-import android.provider.MediaStore;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.SurfaceHolder;
@@ -46,7 +39,6 @@ import com.google.zxing.Result;
 import java.io.File;
 import java.io.IOException;
 import java.lang.ref.WeakReference;
-import java.net.URISyntaxException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
@@ -66,11 +58,7 @@ public class QrCodeActivity extends Activity implements Callback, OnClickListene
     /**
      * When the beep has finished playing, rewind to queue up another one.
      */
-    private final MediaPlayer.OnCompletionListener mBeepListener = new MediaPlayer.OnCompletionListener() {
-        public void onCompletion(MediaPlayer mediaPlayer) {
-            mediaPlayer.seekTo(0);
-        }
-    };
+    private final MediaPlayer.OnCompletionListener mBeepListener = mediaPlayer -> mediaPlayer.seekTo(0);
     private CaptureActivityHandler mCaptureActivityHandler;
     private boolean mHasSurface;
     private boolean mPermissionOk;
@@ -218,12 +206,7 @@ public class QrCodeActivity extends Activity implements Callback, OnClickListene
         mInactivityTimer.onActivity();
         playBeepSoundAndVibrate();
         if (null == result) {
-            mDecodeManager.showCouldNotReadQrCodeFromScanner(this, new DecodeManager.OnRefreshCameraListener() {
-                @Override
-                public void refresh() {
-                    restartPreview();
-                }
-            });
+            mDecodeManager.showCouldNotReadQrCodeFromScanner(this, this::restartPreview);
         } else {
             String resultString = result.getText();
 
@@ -401,19 +384,6 @@ public class QrCodeActivity extends Activity implements Callback, OnClickListene
     }
 
     public String getPathFromUri(Uri uri) {
-        /*Cursor cursor = getContentResolver().query(uri, null, null, null, null);
-        cursor.moveToFirst();
-        String document_id = cursor.getString(0);
-        document_id = document_id.substring(document_id.lastIndexOf(":") + 1);
-        cursor.close();
-
-        cursor = getContentResolver().query(
-                android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-                null, MediaStore.Images.Media._ID + " = ? ", new String[]{document_id}, null);
-        cursor.moveToFirst();
-        @SuppressLint("Range") String path = cursor.getString(cursor.getColumnIndex(MediaStore.Images.Media.DATA));
-        cursor.close();
-        return path;*/
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
             File file = PathUtil.Copy(this, uri);
             if (file == null)
@@ -421,7 +391,6 @@ public class QrCodeActivity extends Activity implements Callback, OnClickListene
             return file.getPath();
         }
         else {
-            //buscar codigo compatible para android <KITKAT
             return PathUtil.getPath2(this,uri);
         }
 
@@ -484,12 +453,7 @@ public class QrCodeActivity extends Activity implements Callback, OnClickListene
         private void handleResult(String resultString) {
             QrCodeActivity imagePickerActivity = mWeakQrCodeActivity.get();
 
-            mDecodeManager.showResultDialog(imagePickerActivity, resultString, new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    dialog.dismiss();
-                }
-            });
+            mDecodeManager.showResultDialog(imagePickerActivity, resultString, (dialog, which) -> dialog.dismiss());
         }
 
     }
