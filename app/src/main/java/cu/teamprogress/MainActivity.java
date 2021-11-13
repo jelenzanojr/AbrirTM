@@ -4,14 +4,23 @@ import android.os.Bundle;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.fragment.app.FragmentManager;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.navigation.NavController;
+import androidx.navigation.Navigation;
+import androidx.navigation.ui.AppBarConfiguration;
+import androidx.navigation.ui.NavigationUI;
 import cu.teamprogress.permission.PermissionHandlerActivity;
+import cu.teamprogress.view.OpenTMFragment;
+import cu.teamprogress.view.ZoomFragment;
 import cu.teamprogress.viewmodel.MainViewModel;
 
 import android.view.Menu;
 import android.view.MenuItem;
 
-public class MainActivity extends PermissionHandlerActivity {
+public class MainActivity extends PermissionHandlerActivity implements OpenTMFragment.OnFragmentInteractionListener {
+
+    private AppBarConfiguration appBarConfiguration;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -21,6 +30,11 @@ public class MainActivity extends PermissionHandlerActivity {
         setSupportActionBar(toolbar);
         MainViewModel mainViewModel = new ViewModelProvider(this)
                 .get(MainViewModel.class);
+
+        NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment);
+        appBarConfiguration = new AppBarConfiguration.Builder(navController.getGraph())
+                .build();
+        NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration);
 
     }
 
@@ -44,5 +58,13 @@ public class MainActivity extends PermissionHandlerActivity {
         }*/
 
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public void changeFragment(){
+        FragmentManager fm = getSupportFragmentManager();
+        ZoomFragment fa = new ZoomFragment();
+        fm.beginTransaction().replace(R.id.nav_host_fragment,fa).commit();
+
     }
 }
