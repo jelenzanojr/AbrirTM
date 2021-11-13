@@ -23,7 +23,6 @@ import com.blikoon.qrcodescanner.QrCodeActivity;
 import com.google.android.material.textfield.TextInputLayout;
 import com.google.gson.Gson;
 
-import java.io.IOException;
 import java.io.StringReader;
 
 import androidx.activity.result.ActivityResultLauncher;
@@ -89,7 +88,7 @@ public class OpenTMFragment extends Fragment implements View.OnClickListener{
                 }
             });
 
-    private final TextWatcher peopleTextWatcher = new TextWatcher() {
+    private final TextWatcher linkTextWatcher = new TextWatcher() {
         @Override
         public void beforeTextChanged(CharSequence s, int start, int count, int after) {
 
@@ -136,7 +135,7 @@ public class OpenTMFragment extends Fragment implements View.OnClickListener{
         linkTextInputLayout = view.findViewById(R.id.tiLinkTM);
         view.findViewById(R.id.btnOpen).setOnClickListener(this);
         view.findViewById(R.id.btnClean).setOnClickListener(this);
-        linkEditText.addTextChangedListener(peopleTextWatcher);
+        linkEditText.addTextChangedListener(linkTextWatcher);
 
         ((TextView) view.findViewById(R.id.tvAppVersion)).setText(String.format(getString(R.string.version), BuildConfig.VERSION_NAME));
 
@@ -320,7 +319,10 @@ public class OpenTMFragment extends Fragment implements View.OnClickListener{
     }
 
     private void clean(){
+        linkTextInputLayout.setError(null);
+        linkEditText.removeTextChangedListener(linkTextWatcher);
         linkEditText.setText(null);
+        linkEditText.addTextChangedListener(linkTextWatcher);
 //        mListener.changeFragment();
     }
 
