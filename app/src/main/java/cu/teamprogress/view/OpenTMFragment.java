@@ -74,6 +74,8 @@ public class OpenTMFragment extends Fragment implements View.OnClickListener{
 
                     createDialogOKNO(getString(R.string.information),getString(R.string.desea_abrir_tm)).show();
                 }
+                else
+                    Toast.makeText(requireContext().getApplicationContext(), R.string.not_founded_qr, Toast.LENGTH_LONG).show();
             });
 
     private final ActivityResultLauncher<String[]> searchPermissionForResultLauncher = registerForActivityResult(
