@@ -9,5 +9,13 @@
         android:id="@+id/FirstFragment"
         android:name="cu.teamprogress.view.OpenTMFragment"
         android:label="@string/open_TM_fragment_label"
-        tools:layout="@layout/fragment_open_tm"/>
+        tools:layout="@layout/fragment_open_tm">
+        <action
+            android:id="@+id/action_FirstFragment_to_zoomFragment"
+            app:destination="@id/zoomFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/zoomFragment"
+        android:name="cu.teamprogress.view.ZoomFragment"
+        android:label="ZoomFragment" />
 </navigation>

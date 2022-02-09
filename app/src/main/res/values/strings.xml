@@ -1,6 +1,7 @@
 <resources>
     <string name="app_name">AbrirTM</string>
     <string name="action_scan_qr">Leer QR</string>
+    <string name="action_share">Compartir enlace</string>
     <!-- Strings used for fragments for navigation -->
     <string name="open_TM_fragment_label">Abrir TM</string>
     <string name="second_fragment_label">Second Fragment</string>
@@ -29,5 +30,10 @@
 
     <string name="need_for_camera_permission">Se requiere acceder a la cámara para leer el QR.</string>
     <string name="camera_permission_not_granted">Permiso para acceder a la cámara no otorgado</string>
+    <string name="invalid_qr">QR inválido</string>
+    <string name="not_founded_qr">QR no encontrado</string>
+    <string name="error_create_link">Error al crear enlace de pago</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
 
 </resources>

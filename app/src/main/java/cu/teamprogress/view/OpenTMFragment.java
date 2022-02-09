@@ -21,8 +21,8 @@ import android.widget.Toast;
 
 import com.blikoon.qrcodescanner.QrCodeActivity;
 import com.google.android.material.textfield.TextInputLayout;
+import com.google.gson.Gson;
 
-import java.io.IOException;
 import java.io.StringReader;
 
 import androidx.activity.result.ActivityResultLauncher;
@@ -47,64 +47,38 @@ public class OpenTMFragment extends Fragment implements View.OnClickListener{
     private TextInputLayout linkTextInputLayout;
     private MainViewModel mainViewModel;
 
+    private OnFragmentInteractionListener mListener;
+
     private final ActivityResultLauncher<Intent> qrActivityForResultLauncher = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),
             result -> {
                 if (result.getResultCode() == Activity.RESULT_OK && result.getData() != null) {
                     Intent data = result.getData();
                     String codeJsonTM = data.getStringExtra(GOT_RESULT);
-                    JsonReader reader = new JsonReader(new StringReader(codeJsonTM));
-                    reader.setLenient(true);
-                    String id_transaccion = "";
-                    String importe = "";
-                    String moneda = "";
-                    String numero_proveedor = "";
-                    String version = "";
-                    try {
-                        reader.beginObject();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                    while(true){
-                        try {
-                            if (!reader.hasNext()) break;
-                            String name = reader.nextName();
-                            switch (name){
-                                case "id_transaccion":
-                                    id_transaccion = reader.nextString();
-                                    break;
-                                case "importe":
-                                    importe = reader.nextString();
-                                    break;
-                                case "moneda":
-                                    moneda = reader.nextString();
-                                    break;
-                                case "numero_proveedor":
-                                    numero_proveedor = reader.nextString();
-                                    break;
-                                case "version":
-                                    version = reader.nextString();
-                                    break;
-                            }
 
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                            break;
-                        }
+                    if( codeJsonTM.isEmpty() || codeJsonTM.trim().isEmpty() ){
+                        Toast.makeText(requireContext().getApplicationContext(), R.string.not_founded_qr, Toast.LENGTH_LONG).show();
+                        return;
+                    }
+                    if(isJsonValid(codeJsonTM)){
+                        String enlace = create_link(codeJsonTM);
+                        if (!enlace.isEmpty())
+                            linkEditText.setText(enlace);
+                        else
+                            return;
+                    }
+                    else {
+                        Toast.makeText(requireContext().getApplicationContext(), R.string.invalid_qr, Toast.LENGTH_LONG).show();
+                        return;
+                    }
 
-                    }
-                    try {
-                        reader.endObject();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                    String enlace = String.format(TEMPLATE_TM,id_transaccion,importe,moneda,numero_proveedor);
-                    linkEditText.setText(enlace);
                     createDialogOKNO(getString(R.string.information),getString(R.string.desea_abrir_tm)).show();
                 }
+                else
+                    Toast.makeText(requireContext().getApplicationContext(), R.string.not_founded_qr, Toast.LENGTH_LONG).show();
             });
 
-    private final ActivityResultLauncher<String[]> searchPrinterPermissionForResultLauncher = registerForActivityResult(
+    private final ActivityResultLauncher<String[]> searchPermissionForResultLauncher = registerForActivityResult(
             new ActivityResultContracts.RequestMultiplePermissions(),
             result -> {
                 if (result.containsValue(false)) {
@@ -116,7 +90,7 @@ public class OpenTMFragment extends Fragment implements View.OnClickListener{
                 }
             });
 
-    private final TextWatcher peopleTextWatcher = new TextWatcher() {
+    private final TextWatcher linkTextWatcher = new TextWatcher() {
         @Override
         public void beforeTextChanged(CharSequence s, int start, int count, int after) {
 
@@ -157,20 +131,35 @@ public class OpenTMFragment extends Fragment implements View.OnClickListener{
         return inflater.inflate(R.layout.fragment_open_tm, container, false);
     }
 
-
-
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         linkEditText = view.findViewById(R.id.etLinkTM);
         linkTextInputLayout = view.findViewById(R.id.tiLinkTM);
         view.findViewById(R.id.btnOpen).setOnClickListener(this);
         view.findViewById(R.id.btnClean).setOnClickListener(this);
-        linkEditText.addTextChangedListener(peopleTextWatcher);
+        linkEditText.addTextChangedListener(linkTextWatcher);
 
         ((TextView) view.findViewById(R.id.tvAppVersion)).setText(String.format(getString(R.string.version), BuildConfig.VERSION_NAME));
 
         if (!mainViewModel.getLinkTM().isEmpty())
             linkEditText.setText(mainViewModel.getLinkTM());
+    }
+
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        if (context instanceof OnFragmentInteractionListener) {
+            mListener = (OnFragmentInteractionListener) context;
+        } else {
+            throw new RuntimeException(context.toString()
+                    + " must implement OnFragmentInteractionListener");
+        }
+    }
+
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        mListener = null;
     }
 
     private void openLink(){
@@ -188,6 +177,12 @@ public class OpenTMFragment extends Fragment implements View.OnClickListener{
         }
 
         String URL_TRANSFERMOVIL = linkEditText.getText().toString();
+        if (isJsonValid(URL_TRANSFERMOVIL)){
+            URL_TRANSFERMOVIL = create_link(URL_TRANSFERMOVIL);
+            if (!URL_TRANSFERMOVIL.isEmpty())
+                linkEditText.setText(URL_TRANSFERMOVIL);
+        }
+
         URL_TRANSFERMOVIL = mainViewModel.fixLinkTM(URL_TRANSFERMOVIL);
         try {
             Uri uri = Uri.parse(URL_TRANSFERMOVIL);
@@ -199,7 +194,73 @@ public class OpenTMFragment extends Fragment implements View.OnClickListener{
         }
     }
 
-    public static boolean isAppInstall(String namePackage, Context context) {
+    private String create_link(String codeJsonTM) {
+        JsonReader reader = new JsonReader(new StringReader(codeJsonTM));
+        reader.setLenient(true);
+        String id_transaccion = "";
+        String importe = "";
+        String moneda = "";
+        String numero_proveedor = "";
+        String version = "";
+
+        try {
+            reader.beginObject();
+        } catch (Exception e) {
+            e.printStackTrace();
+            Toast.makeText(requireContext().getApplicationContext(), R.string.error_create_link, Toast.LENGTH_LONG).show();
+            return "";
+        }
+        while(true){
+            try {
+                if (!reader.hasNext()) {
+                    break;
+                }
+                String name = reader.nextName();
+                switch (name){
+                    case "id_transaccion":
+                        id_transaccion = reader.nextString();
+                        break;
+                    case "importe":
+                        importe = reader.nextString();
+                        break;
+                    case "moneda":
+                        moneda = reader.nextString();
+                        break;
+                    case "numero_proveedor":
+                        numero_proveedor = reader.nextString();
+                        break;
+                    case "version":
+                        version = reader.nextString();
+                        break;
+                }
+
+            } catch (Exception e) {
+                e.printStackTrace();
+                Toast.makeText(requireContext().getApplicationContext(), R.string.error_create_link, Toast.LENGTH_LONG).show();
+                return "";
+            }
+
+        }
+        try {
+            reader.endObject();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        String enlace = String.format(TEMPLATE_TM,id_transaccion,importe,moneda,numero_proveedor);
+        return enlace;
+    }
+
+    private boolean isJsonValid(String json){
+        final Gson gson = new Gson();
+        try {
+            gson.fromJson(json, Object.class);
+            return true;
+        } catch(com.google.gson.JsonSyntaxException ex) {
+            return false;
+        }
+    }
+
+    public boolean isAppInstall(String namePackage, Context context) {
 
         PackageManager pm = context.getPackageManager();
         try {
@@ -208,6 +269,22 @@ public class OpenTMFragment extends Fragment implements View.OnClickListener{
         } catch (PackageManager.NameNotFoundException e) {
             return false;
         }
+    }
+
+    public void sharedLink(){
+
+        if( linkEditText.getText() == null || linkEditText.getText().toString().trim().isEmpty() ) {
+            Toast.makeText(requireContext(),"Enlace vacío",Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        Intent sendIntent = new Intent();
+        sendIntent.setAction(Intent.ACTION_SEND);
+        sendIntent.putExtra(Intent.EXTRA_TEXT, linkEditText.getText().toString());
+        sendIntent.setType("text/plain");
+
+        Intent shareIntent = Intent.createChooser(sendIntent, null);
+        startActivity(shareIntent);
     }
 
     public AlertDialog createDialog(String tile,String body) {
@@ -244,12 +321,16 @@ public class OpenTMFragment extends Fragment implements View.OnClickListener{
     }
 
     private void clean(){
+        linkTextInputLayout.setError(null);
+        linkEditText.removeTextChangedListener(linkTextWatcher);
         linkEditText.setText(null);
+        linkEditText.addTextChangedListener(linkTextWatcher);
+//        mListener.changeFragment();
     }
 
     public void scanQr() {
         PermissionHandlerActivity activity = (PermissionHandlerActivity) requireActivity();
-        if (activity.requestCameraPermission(searchPrinterPermissionForResultLauncher)) {
+        if (activity.requestCameraPermission(searchPermissionForResultLauncher)) {
             Intent i = new Intent(requireContext(), QrCodeActivity.class);
             qrActivityForResultLauncher.launch(i);
         }
@@ -272,6 +353,9 @@ public class OpenTMFragment extends Fragment implements View.OnClickListener{
         if (id == R.id.action_scan_qr) {
             scanQr();
         }
+        else if( id == R.id.action_share){
+            sharedLink();
+        }
 
         return super.onOptionsItemSelected(item);
     }
@@ -286,5 +370,9 @@ public class OpenTMFragment extends Fragment implements View.OnClickListener{
             clean();
         }
 
+    }
+
+    public interface OnFragmentInteractionListener{
+        void changeFragment();
     }
 }
